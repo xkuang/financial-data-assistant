@@ -191,6 +191,26 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Apache Airflow team for the amazing workflow management platform
 - Django team for the robust web framework
 
+## Learning Resources
+
+### Interview Preparation Courses
+Looking to level up your interview skills? Check out these comprehensive courses:
+
+- [Grokking the Modern System Design Interview](https://www.educative.io/explore?aff=VMyL) - The ultimate guide developed by Meta & Google engineers. Master distributed system fundamentals and practice with real-world interview questions. (26 hours, Intermediate)
+
+- [Grokking the Coding Interview Patterns](https://www.educative.io/explore?aff=VMyL) - Master 24 essential coding patterns to solve thousands of LeetCode-style questions. Created by FAANG engineers. (85 hours, Intermediate)
+
+- [Grokking the Low Level Design Interview Using OOD Principles](https://www.educative.io/explore?aff=VMyL) - A battle-tested guide to Object Oriented Design Interviews, developed by FAANG engineers. Master OOD fundamentals with practical examples.
+
+### Essential Reading
+- [Designing Data-Intensive Applications](https://amzn.to/4hiHZZf) by Martin Kleppmann - The definitive guide to building reliable, scalable, and maintainable systems. A must-read for understanding the principles behind modern data systems.
+
+### Hosting Solutions
+For deploying your own instance of this project, consider these reliable hosting options:
+
+- [DigitalOcean](https://www.tkqlhce.com/click-101329284-15836238) - Simple and robust cloud infrastructure
+- [DigitalOcean Managed Databases](https://www.anrdoezrs.net/click-101329284-15836245) - Fully managed PostgreSQL databases
+
 ## Support
 
 For support, please open an issue in the GitHub repository or contact the maintainers. 
