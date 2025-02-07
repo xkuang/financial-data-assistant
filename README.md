@@ -1,5 +1,9 @@
 # Financial Data Assistant
 
+![5321738902254_ pic](https://github.com/user-attachments/assets/44b747f9-0442-4f6a-a940-70e009b491ef)
+
+![5311738902216_ pic](https://github.com/user-attachments/assets/3eb87885-70dc-4f6b-8eaa-98672aa91208)
+
 **Author**: Xiaoting Kuang
 
 **Development Tools**:
@@ -7,6 +11,9 @@
 - AI Assistance: Claude (Anthropic) - For rapid development and problem-solving
 
 A comprehensive financial data platform that aggregates and analyzes data from FDIC (Federal Deposit Insurance Corporation) and NCUA (National Credit Union Administration). The platform includes an automated data pipeline using Apache Airflow and a web interface with SQL querying capabilities.
+
+![5331738902295_ pic](https://github.com/user-attachments/assets/eb939b35-863e-4d58-b97c-09375793a8a6)
+
 
 ## Features
 
