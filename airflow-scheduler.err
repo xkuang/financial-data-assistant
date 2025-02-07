@@ -1,0 +1,7 @@
+/Users/admin/Documents/100 days AI/day17/venv/lib/python3.11/site-packages/airflow/config_templates/airflow_local_settings.py:51 DeprecationWarning: The base_log_folder option in [core] has been moved to the base_log_folder option in [logging] - the old setting has been used, but please update your config.
+/Users/admin/Documents/100 days AI/day17/venv/lib/python3.11/site-packages/airflow/utils/serve_logs.py:47 DeprecationWarning: The base_log_folder option in [core] has been moved to the base_log_folder option in [logging] - the old setting has been used, but please update your config.
+[2025-02-02 04:28:01 -0800] [94100] [INFO] Starting gunicorn 21.2.0
+[2025-02-02 04:28:01 -0800] [94100] [INFO] Listening at: http://[::]:8793 (94100)
+[2025-02-02 04:28:01 -0800] [94100] [INFO] Using worker: sync
+[2025-02-02 04:28:01 -0800] [94112] [INFO] Booting worker with pid: 94112
+[2025-02-02 04:28:01 -0800] [94113] [INFO] Booting worker with pid: 94113

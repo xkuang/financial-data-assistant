@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}Financial Institutions Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4 mb-4">Financial Institutions Overview</h1>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Total Institutions Card -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title metric-label">
+                        <i class="fas fa-building me-2"></i>
+                        Total Institutions
+                    </h5>
+                    <p class="metric-value">{{ total_institutions|intcomma }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Assets Card -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title metric-label">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Total Assets
+                    </h5>
+                    <p class="metric-value">${{ total_assets|floatformat:2|intcomma }}</p>
+                    <p class="text-muted">{{ total_assets_b|floatformat:1|intcomma }}B USD</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Total Deposits Card -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h5 class="card-title metric-label">
+                        <i class="fas fa-piggy-bank me-2"></i>
+                        Total Deposits
+                    </h5>
+                    <p class="metric-value">${{ total_deposits|floatformat:2|intcomma }}</p>
+                    <p class="text-muted">{{ total_deposits_b|floatformat:1|intcomma }}B USD</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Institution Types Chart -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Institution Types
+                    </h5>
+                    <canvas id="institutionTypesChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Asset Distribution Chart -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Asset Distribution
+                    </h5>
+                    <canvas id="assetDistributionChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- State Analysis -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Top States by Assets
+                    </h5>
+                    <div id="stateMetricsTable" class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>State</th>
+                                    <th>Institutions</th>
+                                    <th>Assets</th>
+                                    <th>Market Share</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deposit Trends -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Deposit Growth Analysis
+                    </h5>
+                    <div id="depositTrendsContent">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Asset Tier Analysis -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-layer-group me-2"></i>
+                        Asset Tier Analysis
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table" id="assetTierTable">
+                            <thead>
+                                <tr>
+                                    <th>Asset Tier</th>
+                                    <th>Institutions</th>
+                                    <th>Total Assets</th>
+                                    <th>Total Deposits</th>
+                                    <th>Asset Share</th>
+                                    <th>Deposit/Asset Ratio</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
+    };
+    
+    const formatPercentage = (value) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'percent',
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+        }).format(value / 100);
+    };
+
+    const formatBillions = (value) => {
+        const billions = value / 1_000_000_000;
+        return `$${billions.toFixed(1)}B`;
+    };
+    
+    // Fetch institution metrics
+    fetch('/dashboard/api/metrics/institutions/')
+        .then(response => response.json())
+        .then(data => {
+            const typeMetrics = data.type_metrics || [];
+            const total = typeMetrics.reduce((sum, item) => sum + item.count, 0);
+            
+            new Chart(document.getElementById('institutionTypesChart'), {
+                type: 'pie',
+                data: {
+                    labels: typeMetrics.map(item => 
+                        `${item.type === 'BANK' ? 'Bank' : 'Credit Union'} (${formatPercentage(item.count / total * 100)})`
+                    ),
+                    datasets: [{
+                        data: typeMetrics.map(item => item.count),
+                        backgroundColor: [
+                            '#0d6efd',
+                            '#6610f2'
+                        ]
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const value = context.raw;
+                                    return `${value.toLocaleString()} institutions`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    
+    // Fetch asset tier metrics
+    fetch('/dashboard/api/metrics/asset-tiers/')
+        .then(response => response.json())
+        .then(data => {
+            const tierMetrics = data.tier_metrics || [];
+            
+            // Update asset distribution chart
+            new Chart(document.getElementById('assetDistributionChart'), {
+                type: 'bar',
+                data: {
+                    labels: tierMetrics.map(item => item.tier),
+                    datasets: [{
+                        label: 'Number of Institutions',
+                        data: tierMetrics.map(item => item.count),
+                        backgroundColor: '#0d6efd'
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => value.toLocaleString()
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const value = context.raw;
+                                    const total = tierMetrics.reduce((sum, item) => sum + item.count, 0);
+                                    const percentage = (value / total * 100).toFixed(1);
+                                    return `${value.toLocaleString()} institutions (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update asset tier table
+            const tableBody = document.querySelector('#assetTierTable tbody');
+            tableBody.innerHTML = tierMetrics.map(tier => `
+                <tr>
+                    <td>${tier.tier}</td>
+                    <td>${tier.count.toLocaleString()}</td>
+                    <td>${formatBillions(tier.total_assets)}</td>
+                    <td>${formatBillions(tier.total_deposits)}</td>
+                    <td>${formatPercentage(tier.asset_share)}</td>
+                    <td>${formatPercentage(tier.deposit_to_asset_ratio)}</td>
+                </tr>
+            `).join('');
+        });
+
+    // Fetch state metrics
+    fetch('/dashboard/api/metrics/states/')
+        .then(response => response.json())
+        .then(data => {
+            const stateMetrics = data.state_metrics || [];
+            const tableBody = document.querySelector('#stateMetricsTable tbody');
+            
+            tableBody.innerHTML = stateMetrics.map(state => `
+                <tr>
+                    <td>${state.state}</td>
+                    <td>${state.institution_count.toLocaleString()}</td>
+                    <td>${formatBillions(state.total_assets)}</td>
+                    <td>${formatPercentage(state.asset_share)}</td>
+                </tr>
+            `).join('');
+        });
+
+    // Fetch deposit trends
+    fetch('/dashboard/api/metrics/deposit-trends/')
+        .then(response => response.json())
+        .then(data => {
+            const content = document.getElementById('depositTrendsContent');
+            const stats = data.stats || {};
+            
+            content.innerHTML = `
+                <div class="mb-3">
+                    <h6 class="text-muted">Summary Statistics</h6>
+                    <p class="mb-1">Median Change: ${formatPercentage(stats.median_change)}</p>
+                    <p class="mb-1">Mean Change: ${formatPercentage(stats.mean_change)}</p>
+                    <p>Standard Deviation: ${formatPercentage(stats.std_dev)}</p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-danger">Top Declines</h6>
+                        <ul class="list-unstyled">
+                            ${(data.top_declines || []).map(item => `
+                                <li>
+                                    ${item.state} - ${formatPercentage(item.change_pct)}
+                                    <small class="text-muted d-block">
+                                        Current Deposits: ${formatBillions(item.current_deposits)}
+                                    </small>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success">Top Growth</h6>
+                        <ul class="list-unstyled">
+                            ${(data.top_growth || []).map(item => `
+                                <li>
+                                    ${item.state} - ${formatPercentage(item.change_pct)}
+                                    <small class="text-muted d-block">
+                                        Current Deposits: ${formatBillions(item.current_deposits)}
+                                    </small>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+            `;
+        });
+});
+</script>
+
+<style>
+.metric-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #0d6efd;
+    margin-bottom: 0.25rem;
+}
+
+.metric-label {
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.table th {
+    font-weight: 600;
+    color: #495057;
+}
+
+.table td {
+    vertical-align: middle;
+}
+</style>
+{% endblock %} 

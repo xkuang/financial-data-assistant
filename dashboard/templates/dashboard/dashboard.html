@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    .chart-container {
+        position: relative;
+        margin: 20px 0;
+        height: 400px;
+    }
+    .metric-card {
+        padding: 20px;
+        margin: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .metric-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    .metric-label {
+        font-size: 14px;
+        color: #7f8c8d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="mb-4">{{ title }}</h1>
+
+    <!-- Summary Metrics -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="metric-card bg-light">
+                <div class="metric-value" id="total-institutions">-</div>
+                <div class="metric-label">Total Institutions</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card bg-light">
+                <div class="metric-value" id="total-assets">-</div>
+                <div class="metric-label">Total Assets</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card bg-light">
+                <div class="metric-value" id="total-deposits">-</div>
+                <div class="metric-label">Total Deposits</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card bg-light">
+                <div class="metric-value" id="avg-assets">-</div>
+                <div class="metric-label">Average Assets</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+        <!-- Institution Type Distribution -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Institution Type Distribution</h5>
+                    <div class="chart-container">
+                        <canvas id="typeDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Geographic Distribution -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Top 10 States by Institution Count</h5>
+                    <div class="chart-container">
+                        <canvas id="stateDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Asset Tiers -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Distribution by Asset Tier</h5>
+                    <div class="chart-container">
+                        <canvas id="assetTierChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Time Series -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Quarterly Growth Trends</h5>
+                    <div class="chart-container">
+                        <canvas id="timeSeriesChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/numeral@2.0.6/numeral.min.js"></script>
+<script>
+// Utility function to format numbers
+function formatNumber(value) {
+    return numeral(value).format('0.0a');
+}
+
+// Fetch and render institution metrics
+fetch('/dashboard/metrics/institutions/')
+    .then(response => response.json())
+    .then(data => {
+        // Update summary metrics
+        const totalInstitutions = data.type_metrics.reduce((sum, item) => sum + item.count, 0);
+        const totalAssets = data.type_metrics.reduce((sum, item) => sum + (item.total_assets || 0), 0);
+        const totalDeposits = data.type_metrics.reduce((sum, item) => sum + (item.total_deposits || 0), 0);
+        const avgAssets = totalAssets / totalInstitutions;
+
+        document.getElementById('total-institutions').textContent = formatNumber(totalInstitutions);
+        document.getElementById('total-assets').textContent = `$${formatNumber(totalAssets)}`;
+        document.getElementById('total-deposits').textContent = `$${formatNumber(totalDeposits)}`;
+        document.getElementById('avg-assets').textContent = `$${formatNumber(avgAssets)}`;
+
+        // Render type distribution chart
+        new Chart(document.getElementById('typeDistributionChart'), {
+            type: 'pie',
+            data: {
+                labels: data.type_metrics.map(item => item.type),
+                datasets: [{
+                    data: data.type_metrics.map(item => item.count),
+                    backgroundColor: ['#2ecc71', '#3498db']
+                }]
+            }
+        });
+
+        // Render state distribution chart
+        new Chart(document.getElementById('stateDistributionChart'), {
+            type: 'bar',
+            data: {
+                labels: data.state_metrics.map(item => item.state),
+                datasets: [{
+                    label: 'Number of Institutions',
+                    data: data.state_metrics.map(item => item.count),
+                    backgroundColor: '#3498db'
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+
+// Fetch and render asset tier metrics
+fetch('/dashboard/metrics/asset-tiers/')
+    .then(response => response.json())
+    .then(data => {
+        new Chart(document.getElementById('assetTierChart'), {
+            type: 'bar',
+            data: {
+                labels: data.tier_metrics.map(item => item.tier),
+                datasets: [{
+                    label: 'Number of Institutions',
+                    data: data.tier_metrics.map(item => item.count),
+                    backgroundColor: '#e74c3c'
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+
+// Fetch and render time series metrics
+fetch('/dashboard/metrics/time-series/')
+    .then(response => response.json())
+    .then(data => {
+        const labels = data.quarterly_trends.map(item => 
+            `${item.year.slice(0,4)} Q${Math.floor(new Date(item.quarter).getMonth() / 3) + 1}`
+        );
+
+        new Chart(document.getElementById('timeSeriesChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Asset Growth (%)',
+                    data: data.quarterly_trends.map(item => item.asset_growth),
+                    borderColor: '#2ecc71',
+                    fill: false
+                }, {
+                    label: 'Deposit Growth (%)',
+                    data: data.quarterly_trends.map(item => item.deposit_growth),
+                    borderColor: '#3498db',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Growth Rate (%)'
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">FDIC Bank Statistics Dashboard</h1>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Asset Distribution by Tier</h5>
+                </div>
+                <div class="card-body">
+                    <img src="{% static 'visualizations/asset_distribution.png' %}" class="img-fluid" alt="Asset Distribution">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Deposit Changes by Tier</h5>
+                </div>
+                <div class="card-body">
+                    <img src="{% static 'visualizations/deposit_changes.png' %}" class="img-fluid" alt="Deposit Changes">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Assets vs Deposits Correlation</h5>
+                </div>
+                <div class="card-body">
+                    <img src="{% static 'visualizations/asset_deposit_correlation.png' %}" class="img-fluid" alt="Asset-Deposit Correlation">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Tier Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        {{ tier_stats|safe }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

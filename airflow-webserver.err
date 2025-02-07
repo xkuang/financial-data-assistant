@@ -1,0 +1,1 @@
+/Users/admin/Documents/100 days AI/day17/venv/lib/python3.11/site-packages/airflow/config_templates/airflow_local_settings.py:51 DeprecationWarning: The base_log_folder option in [core] has been moved to the base_log_folder option in [logging] - the old setting has been used, but please update your config.

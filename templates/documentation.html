@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+
+{% block title %}Documentation - Financial Data Assistant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-3">
+            <div class="card sticky-top" style="top: 2rem;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book me-2"></i>
+                        Documentation
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <nav id="toc" class="nav flex-column">
+                        <a class="nav-link" href="#architecture">Architecture Overview</a>
+                        <a class="nav-link" href="#data-loading">Data Loading Flow</a>
+                        <a class="nav-link" href="#data-models">Data Models</a>
+                        <a class="nav-link" href="#transformation">Data Transformation</a>
+                        <a class="nav-link" href="#loading-mechanics">Loading Mechanics</a>
+                        <a class="nav-link" href="#quality">Data Quality</a>
+                        <a class="nav-link" href="#optimization">Optimization</a>
+                        <a class="nav-link" href="#monitoring">Monitoring</a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Architecture Section -->
+                    <section id="architecture" class="mb-5">
+                        <h2 class="border-bottom pb-2">
+                            <i class="fas fa-sitemap me-2"></i>
+                            Architecture Overview
+                        </h2>
+                        <div class="mt-4">
+                            <p>The system follows a multi-layered architecture:</p>
+                            <pre class="bg-light p-3 rounded"><code>Data Sources → Data Pipeline → Database → Web Application
+     ↓              ↓            ↓            ↓
+   FDIC          Airflow    PostgreSQL     Django
+   NCUA          Redis                    REST API
+                                      Chat Interface</code></pre>
+                        </div>
+                    </section>
+
+                    <!-- Data Loading Section -->
+                    <section id="data-loading" class="mb-5">
+                        <h2 class="border-bottom pb-2">
+                            <i class="fas fa-database me-2"></i>
+                            Data Loading Flow
+                        </h2>
+                        <div class="mt-4">
+                            <h4>Data Source Integration</h4>
+                            <div class="code-block">
+                                <pre class="bg-light p-3 rounded"><code class="python">def check_fdic_data():
+    """Checks FDIC website for updates using BeautifulSoup"""
+    url = "https://www.fdic.gov/resources/data-tools/"
+    response = requests.get(url)
+    # Implements idempotency through content hash checking
+    return check_content_hash(response.content)</code></pre>
+                            </div>
+
+                            <h4 class="mt-4">Airflow DAG Orchestration</h4>
+                            <div class="code-block">
+                                <pre class="bg-light p-3 rounded"><code class="python"># refresh_financial_data_dag.py
+dag = DAG(
+    'refresh_financial_data',
+    schedule_interval='0 6 * * *',  # Daily at 6 AM
+    default_args={
+        'retries': 1,
+        'retry_delay': timedelta(minutes=5),
+        'email_on_failure': True
+    }
+)</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Data Models Section -->
+                    <section id="data-models" class="mb-5">
+                        <h2 class="border-bottom pb-2">
+                            <i class="fas fa-table me-2"></i>
+                            Data Models
+                        </h2>
+                        <div class="mt-4">
+                            <h4>Financial Institution Model</h4>
+                            <div class="code-block">
+                                <pre class="bg-light p-3 rounded"><code class="python">class FinancialInstitution(models.Model):
+    INSTITUTION_TYPES = [
+        ('BANK', 'Bank'),
+        ('CREDIT_UNION', 'Credit Union')
+    ]
+    
+    ASSET_TIERS = [
+        ('<$100M', 'Less than $100M'),
+        ('$100M-$1B', '$100M to $1B'),
+        ('$1B-$10B', '$1B to $10B'),
+        ('>$10B', 'Greater than $10B')
+    ]</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Data Transformation Section -->
+                    <section id="transformation" class="mb-5">
+                        <h2 class="border-bottom pb-2">
+                            <i class="fas fa-exchange-alt me-2"></i>
+                            Data Transformation
+                        </h2>
+                        <div class="mt-4">
+                            <h4>Data Cleaning</h4>
+                            <div class="code-block">
+                                <pre class="bg-light p-3 rounded"><code class="python">def clean_financial_data(df):
+    """Cleans and standardizes financial data"""
+    # Remove invalid entries
+    df = df.dropna(subset=['charter_number', 'total_assets'])
+    
+    # Standardize numeric fields
+    df['total_assets'] = pd.to_numeric(df['total_assets'], errors='coerce')
+    df['total_deposits'] = pd.to_numeric(df['total_deposits'], errors='coerce')
+    
+    return df</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Loading Mechanics Section -->
+                    <section id="loading-mechanics" class="mb-5">
+                        <h2 class="border-bottom pb-2">
+                            <i class="fas fa-cogs me-2"></i>
+                            Loading Mechanics
+                        </h2>
+                        <div class="mt-4">
+                            <h4>Idempotent Processing</h4>
+                            <div class="code-block">
+                                <pre class="bg-light p-3 rounded"><code class="python">def load_institution_data(data):
+    """Loads institution data with idempotency"""
+    with transaction.atomic():
+        institution, created = FinancialInstitution.objects.update_or_create(
+            charter_number=data['charter_number'],
+            defaults={
+                'institution_type': data['type'],
+                'asset_tier': calculate_asset_tier(data['total_assets'])
+            }
+        )</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Data Quality Section -->
+                    <section id="quality" class="mb-5">
+                        <h2 class="border-bottom pb-2">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Data Quality
+                        </h2>
+                        <div class="mt-4">
+                            <h4>Validation Checks</h4>
+                            <div class="code-block">
+                                <pre class="bg-light p-3 rounded"><code class="python">def validate_financial_data(df):
+    """Validates financial data quality"""
+    validation_results = {
+        'missing_fields': df.isnull().sum().to_dict(),
+        'negative_assets': (df['total_assets'] < 0).sum(),
+        'duplicate_charters': df['charter_number'].duplicated().sum()
+    }
+    return validation_results</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Optimization Section -->
+                    <section id="optimization" class="mb-5">
+                        <h2 class="border-bottom pb-2">
+                            <i class="fas fa-tachometer-alt me-2"></i>
+                            Performance Optimization
+                        </h2>
+                        <div class="mt-4">
+                            <h4>Database Indexing</h4>
+                            <div class="code-block">
+                                <pre class="bg-light p-3 rounded"><code class="sql">-- Optimize common queries
+CREATE INDEX idx_institution_assets ON financial_institutions(asset_tier, total_assets);
+CREATE INDEX idx_quarterly_date ON quarterly_stats(quarter_end_date);</code></pre>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Monitoring Section -->
+                    <section id="monitoring" class="mb-5">
+                        <h2 class="border-bottom pb-2">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Monitoring and Maintenance
+                        </h2>
+                        <div class="mt-4">
+                            <h4>Performance Monitoring</h4>
+                            <div class="code-block">
+                                <pre class="bg-light p-3 rounded"><code class="python">def log_performance_metrics():
+    """Logs key performance metrics"""
+    metrics = {
+        'load_time': measure_load_time(),
+        'processing_time': measure_processing_time(),
+        'memory_usage': get_memory_usage(),
+        'db_connections': get_db_connection_count()
+    }
+    logger.info(f"Performance metrics: {metrics}")</code></pre>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+
+    // Highlight active section in TOC
+    const sections = document.querySelectorAll('section');
+    const navLinks = document.querySelectorAll('#toc .nav-link');
+
+    function highlightNavigation() {
+        let scrollPosition = window.scrollY;
+
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop - 100;
+            const sectionBottom = sectionTop + section.offsetHeight;
+
+            if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+                const currentId = section.getAttribute('id');
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${currentId}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    }
+
+    window.addEventListener('scroll', highlightNavigation);
+});
+</script>
+
+<style>
+.nav-link.active {
+    color: #0d6efd;
+    font-weight: bold;
+}
+
+.sticky-top {
+    z-index: 1000;
+    top: 1rem;
+}
+
+section {
+    scroll-margin-top: 2rem;
+}
+
+.code-block {
+    position: relative;
+}
+
+pre {
+    margin-bottom: 0;
+    white-space: pre-wrap;
+}
+
+code {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+    font-size: 0.9rem;
+}
+
+h4 {
+    color: #495057;
+    margin-top: 2rem;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+#toc .nav-link {
+    padding: 0.5rem 0;
+    color: #6c757d;
+    transition: all 0.2s;
+}
+
+#toc .nav-link:hover {
+    color: #0d6efd;
+    text-decoration: none;
+    padding-left: 0.5rem;
+}
+</style>
+{% endblock %} 
