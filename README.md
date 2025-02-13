@@ -179,14 +179,6 @@ The application provides several API endpoints for data access:
 - `/chat/query/`: Natural language query endpoint
 - `/chat/sql/`: SQL query endpoint
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
 ## Acknowledgments
 
 - FDIC for providing financial institution data
@@ -213,7 +205,3 @@ For deploying your own instance of this project, consider these reliable hosting
 
 - [DigitalOcean](https://www.tkqlhce.com/click-101329284-15836238) - Simple and robust cloud infrastructure
 - [DigitalOcean Managed Databases](https://www.anrdoezrs.net/click-101329284-15836245) - Fully managed PostgreSQL databases
-
-## Support
-
-For support, please open an issue in the GitHub repository or contact the maintainers. 
